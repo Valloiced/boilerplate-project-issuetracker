@@ -4,11 +4,13 @@ const express     = require('express');
 const bodyParser  = require('body-parser');
 const expect      = require('chai').expect;
 const cors        = require('cors');
+const mongoose    = require('mongoose')
 require('dotenv').config();
 
 const apiRoutes         = require('./routes/api.js');
 const fccTestingRoutes  = require('./routes/fcctesting.js');
 const runner            = require('./test-runner');
+const connect           = require('./connect');
 
 let app = express();
 
@@ -33,11 +35,26 @@ app.route('/')
     res.sendFile(process.cwd() + '/views/index.html');
   });
 
+//Connecting to database with schema
+connect();
+let Schema = new mongoose.Schema({
+  project:     String,
+  issue_title: {type: String, required: true},
+  issue_text:  {type: String, required: true},
+  created_on:  Date,
+  updated_on:  Date,
+  created_by:  {type: String, required: true},
+  assigned_to: String,
+  open:        Boolean,
+  status_text: String,
+})
+let Issue = mongoose.model("Issue", Schema);
+
 //For FCC testing purposes
 fccTestingRoutes(app);
 
 //Routing for API 
-apiRoutes(app);  
+apiRoutes(app, Issue);  
     
 //404 Not Found Middleware
 app.use(function(req, res, next) {
